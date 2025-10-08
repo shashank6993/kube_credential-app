@@ -1,0 +1,84 @@
+version: "3.8"
+
+services:
+  issuance-service:
+    build:
+      context: ./issuance-service
+      dockerfile: Dockerfile
+    container_name: issuance-service
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:kube@db.nilfamxppmrrokujgtrl.supabase.co:5432/postgres?sslmode=require
+      - LOG_LEVEL=info
+    volumes:
+      - shared-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  verification-service:
+    build:
+      context: ./verification-service
+      dockerfile: Dockerfile
+    container_name: verification-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:kube@db.nilfamxppmrrokujgtrl.supabase.co:5432/postgres?sslmode=require
+      - LOG_LEVEL=info
+    volumes:
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3001/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_ISSUANCE_API_URL=http://localhost:3000
+      - VITE_VERIFICATION_API_URL=http://localhost:3001
+    depends_on:
+      - issuance-service
+      - verification-service
+    restart: unless-stopped
+
+volumes:
+  shared-data:
+    driver: local
+
+networks:
+  default:
+    name: kube-credential-network
