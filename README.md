@@ -2,6 +2,8 @@
 
 A microservice-based credential issuance and verification system built with Node.js, TypeScript, React, and Kubernetes.
 
+Maintainer: Shashank Kumar Chaudhary | Email: shashank272004@gmail.com | Contact: 8423851788
+
 ## 📋 Table of Contents
 
 - [Overview](#overview)
